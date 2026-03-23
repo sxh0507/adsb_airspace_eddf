@@ -11,6 +11,7 @@ def test_readme_contains_frankfurt_scope_and_trino_plan() -> None:
 
     for expected_text in [
         "Frankfurt Airspace Complexity Analytics",
+        "adsb_airspace_eddf",
         "EDDF",
         "120-180 NM",
         "SFC-FL100",
@@ -18,6 +19,10 @@ def test_readme_contains_frankfurt_scope_and_trino_plan() -> None:
         "OpenSky Trino",
         "5-minute",
         "15-minute",
+        "01a_ingest_opensky_history.ipynb",
+        "01b_ingest_opensky_live.ipynb",
+        "obs.ingestion_partition_log",
+        "dry_run=true",
         "aircraft_count",
         "heading_dispersion",
         "altitude_dispersion",
@@ -39,6 +44,7 @@ def test_configs_capture_initial_region_and_pipeline_defaults() -> None:
         assert expected_text in region_text
 
     for expected_text in [
+        "catalog_name: adsb_airspace_eddf",
         "complexity_window_minutes: 5",
         "trend_window_minutes: 15",
         "traffic_load",

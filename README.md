@@ -60,6 +60,12 @@ The first version uses two altitude bands:
 - **optional near-real-time source:** OpenSky live API
 - **not included in v1 score:** weather
 
+### Catalog convention
+
+The default catalog for this project is:
+
+- `adsb_airspace_eddf`
+
 Weather is intentionally excluded from the first complexity score so that the baseline ADS-B methodology can be completed quickly and explained clearly. Weather can be added in a second phase.
 
 At the scaffold level, the first-phase project keeps the broader component labels:
@@ -194,6 +200,123 @@ Recommended tables:
 - `gold_fra_complexity_hotspots`
 - `gold_fra_complexity_trend_15m`
 
+## Databricks Naming
+
+The Databricks implementation uses fully qualified table names in the form:
+
+`catalog.schema.table`
+
+The default naming contract for the first Frankfurt version is:
+
+- `adsb_airspace_eddf.ref.project_scope`
+- `adsb_airspace_eddf.ref.altitude_bands`
+- `adsb_airspace_eddf.ref.grid_cells`
+- `adsb_airspace_eddf.brz_adsb.hist_state_vectors`
+- `adsb_airspace_eddf.brz_adsb.hist_flights`
+- `adsb_airspace_eddf.brz_adsb.live_states`
+- `adsb_airspace_eddf.brz_weather.metar_raw`
+- `adsb_airspace_eddf.slv_airspace.flight_states_clean`
+- `adsb_airspace_eddf.gld_airspace.grid_complexity_5m`
+- `adsb_airspace_eddf.gld_airspace.complexity_hotspots`
+- `adsb_airspace_eddf.gld_airspace.complexity_trend_15m`
+- `adsb_airspace_eddf.obs.ingestion_log`
+- `adsb_airspace_eddf.obs.ingestion_partition_log`
+- `adsb_airspace_eddf.obs.pipeline_run_log`
+
+## Observability Design
+
+### Run-level ingestion log
+
+`adsb_airspace_eddf.obs.ingestion_log` stores one row per notebook run.
+
+Recommended fields:
+
+- `run_id`
+- `pipeline_name`
+- `source_name`
+- `source_object`
+- `target_table`
+- `scope_id`
+- `start_date`
+- `end_date`
+- `partition_key`
+- `planned_partition_count`
+- `success_partition_count`
+- `failed_partition_count`
+- `dry_run`
+- `status`
+- `rows_written`
+- `started_at`
+- `completed_at`
+- `error_message`
+- `metadata_json`
+
+Recommended `status` values:
+
+- `planned`
+- `running`
+- `success`
+- `partial_success`
+- `failed`
+- `dry_run`
+
+### Partition-level ingestion log
+
+`adsb_airspace_eddf.obs.ingestion_partition_log` stores one row per extracted `hour` or `day` partition.
+
+Recommended fields:
+
+- `run_id`
+- `pipeline_name`
+- `source_object`
+- `target_table`
+- `partition_key`
+- `partition_value`
+- `status`
+- `rows_read`
+- `rows_written`
+- `attempt_no`
+- `dry_run`
+- `started_at`
+- `completed_at`
+- `error_message`
+
+Recommended `status` values:
+
+- `success`
+- `failed`
+- `empty_source`
+- `skipped`
+- `dry_run`
+
+### `dry_run` semantics
+
+`dry_run=true` means:
+
+- load configs and resolve the final run parameters
+- build the planned `hour` and `day` partitions
+- validate the source SQL templates
+- optionally test connectivity with a lightweight query such as `LIMIT 1`
+- do **not** write Bronze tables
+- do **not** overwrite any existing partition
+- do **not** write to `obs` tables unless an explicit future `log_dry_run` option is added
+
+### Partition overwrite safety
+
+Historical ingestion should use a bounded overwrite design:
+
+1. build the SQL for one partition
+2. extract that partition from OpenSky Trino
+3. validate schema and row counts
+4. only then write with a partition-scoped overwrite such as `replaceWhere`
+5. write a row into `obs.ingestion_partition_log`
+
+Safety rule:
+
+- if a source partition returns zero rows, mark it as `empty_source`
+- do not overwrite an existing target partition by default
+- only clear empty partitions when an explicit `overwrite_empty_partitions=true` option is enabled
+
 ## Planned Repository Structure
 
 ```text
@@ -209,7 +332,9 @@ Recommended tables:
 ├── docs/
 │   └── figures/
 ├── notebooks/
-│   ├── 01_ingest_opensky_history.ipynb
+│   ├── 00_platform_setup_catalog_schema.ipynb
+│   ├── 01a_ingest_opensky_history.ipynb
+│   ├── 01b_ingest_opensky_live.ipynb
 │   ├── 02_clean_and_prepare_states.ipynb
 │   ├── 03_build_complexity_metrics.ipynb
 │   └── 04_visualize_results.ipynb
@@ -260,12 +385,12 @@ Edit:
 
 ### 3. Extract historical data
 
-Run the first notebook or Python module to extract bounded OpenSky Trino slices into Bronze files.
+Run the history notebook or Python module to extract bounded OpenSky Trino slices into Bronze tables.
 
 Expected raw outputs:
 
-- `bronze_opensky_state_vectors`
-- `bronze_opensky_flights`
+- `adsb_airspace_eddf.brz_adsb.hist_state_vectors`
+- `adsb_airspace_eddf.brz_adsb.hist_flights`
 
 ### 4. Build Silver states
 
@@ -291,13 +416,37 @@ Create at least:
 
 ## Planned Notebook Flow
 
-### `01_ingest_opensky_history.ipynb`
+### `00_platform_setup_catalog_schema.ipynb`
+
+Purpose:
+
+- create schemas and baseline Delta tables
+- seed the Frankfurt project scope
+- seed the initial altitude bands
+
+### `01a_ingest_opensky_history.ipynb`
 
 Purpose:
 
 - extract bounded historical slices from OpenSky Trino
 - store raw historical ADS-B data
-- log record counts, time coverage, and aircraft counts
+- overwrite `hour` and `day` partitions safely
+- record both run-level and partition-level ingestion status
+
+Primary targets:
+
+- `adsb_airspace_eddf.brz_adsb.hist_state_vectors`
+- `adsb_airspace_eddf.brz_adsb.hist_flights`
+- `adsb_airspace_eddf.obs.ingestion_log`
+- `adsb_airspace_eddf.obs.ingestion_partition_log`
+
+### `01b_ingest_opensky_live.ipynb`
+
+Purpose:
+
+- ingest optional live or recent snapshots from the OpenSky live API
+- support recent-pattern validation and demonstration views
+- remain operationally independent from historical Trino backfill
 
 ### `02_clean_and_prepare_states.ipynb`
 

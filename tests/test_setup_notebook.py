@@ -10,7 +10,7 @@ def test_setup_notebook_contains_expected_schemas_tables_and_scope_defaults() ->
     notebook_text = (REPO_ROOT / "notebooks" / "00_platform_setup_catalog_schema.ipynb").read_text()
 
     for expected_text in [
-        "adsb_airport_eta",
+        "adsb_airspace_eddf",
         "ref",
         "brz_adsb",
         "brz_weather",
@@ -25,6 +25,9 @@ def test_setup_notebook_contains_expected_schemas_tables_and_scope_defaults() ->
         "gld_airspace.grid_complexity_5m",
         "gld_airspace.complexity_hotspots",
         "gld_airspace.complexity_trend_15m",
+        "obs.ingestion_partition_log",
+        "PARTITIONED BY (hour)",
+        "PARTITIONED BY (day)",
         "EDDF",
         "SFC-FL100",
         "FL100-FL245",
