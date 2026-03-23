@@ -6,21 +6,23 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
-def test_clean_notebook_contains_silver_contract() -> None:
+def test_clean_notebook_contains_v2_cellization_contract() -> None:
     notebook_text = (REPO_ROOT / "notebooks" / "02_clean_and_prepare_states.ipynb").read_text()
 
     for expected_text in [
         "02 Clean And Prepare States",
-        "slv_airspace.flight_states_clean",
-        "ref.grid_cells",
+        "slv_airspace.flight_states_cellized_v2",
+        "ref.cell_schemes_v2",
+        "ref.airspace_cells_v2",
         "obs.pipeline_run_log",
-        "source_hour_epoch",
-        "grid_resolution_deg",
-        "time_window_5m",
-        "altitude_band_id",
-        "grid_id",
-        "overwrite_source_run",
+        "cell_scheme_id",
+        "horizontal_cell_nm",
+        "vertical_cell_ft",
+        "analysis_window_start",
+        "horizontal_cell_id",
+        "vertical_cell_id",
+        "projection_mode",
         "DELETE FROM",
-        "MERGE INTO",
+        "local_nm",
     ]:
         assert expected_text in notebook_text
