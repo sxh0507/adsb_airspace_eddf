@@ -18,6 +18,8 @@ def test_history_notebook_contains_partition_contract_and_live_execution_hooks()
         "state_vectors_data4",
         "flights_data4",
         "dry_run",
+        "start_hour_utc",
+        "end_hour_utc",
         "replaceWhere",
         "empty_source",
         "hour",

@@ -459,6 +459,7 @@ Purpose:
 - store raw historical ADS-B data
 - overwrite `hour` and `day` partitions safely
 - record both run-level and partition-level ingestion status
+- support bounded UTC-hour validation runs with `start_hour_utc` and `end_hour_utc`
 
 Primary targets:
 
