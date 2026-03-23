@@ -23,6 +23,7 @@ def test_readme_contains_frankfurt_scope_and_trino_plan() -> None:
         "01b_ingest_opensky_live.ipynb",
         "obs.ingestion_partition_log",
         "dry_run=true",
+        "external OAuth2 authentication",
         "aircraft_count",
         "heading_dispersion",
         "altitude_dispersion",

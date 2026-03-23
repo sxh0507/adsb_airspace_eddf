@@ -39,7 +39,8 @@ def test_opensky_trino_client_module_exists() -> None:
         "class OpenSkyTrinoClient",
         "def build_config",
         "trino.opensky-network.org",
-        "BasicAuthentication",
+        "OAuth2Authentication",
+        "ConsoleRedirectHandler",
         "query_pandas",
     ]:
         assert expected_text in module_text

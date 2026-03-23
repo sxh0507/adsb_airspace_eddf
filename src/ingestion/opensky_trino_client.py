@@ -7,7 +7,7 @@ from typing import Any
 import pandas as pd
 
 try:
-    from trino.auth import BasicAuthentication
+    from trino.auth import ConsoleRedirectHandler, OAuth2Authentication
     from trino.dbapi import connect
 except ImportError as exc:  # pragma: no cover - exercised in Databricks runtime
     raise ImportError(
@@ -27,7 +27,6 @@ class OpenSkyTrinoConfig:
     host: str = DEFAULT_HOST
     port: int = DEFAULT_PORT
     user: str = ""
-    password: str = ""
     catalog: str = DEFAULT_CATALOG
     schema: str = DEFAULT_SCHEMA
     http_scheme: str = DEFAULT_HTTP_SCHEME
@@ -48,7 +47,6 @@ def _coalesce(*values: Any) -> str:
 def build_config(
     *,
     user: str | None = None,
-    password: str | None = None,
     host: str | None = None,
     port: int | str | None = None,
     catalog: str | None = None,
@@ -58,11 +56,6 @@ def build_config(
     request_timeout_seconds: int | None = None,
 ) -> OpenSkyTrinoConfig:
     resolved_user = _coalesce(user, os.getenv("OPENSKY_TRINO_USER"), os.getenv("OPENSKY_USERNAME"))
-    resolved_password = _coalesce(
-        password,
-        os.getenv("OPENSKY_TRINO_PASSWORD"),
-        os.getenv("OPENSKY_PASSWORD"),
-    )
     resolved_host = _coalesce(host, os.getenv("OPENSKY_TRINO_HOST"), DEFAULT_HOST)
     resolved_catalog = _coalesce(catalog, os.getenv("OPENSKY_TRINO_CATALOG"), DEFAULT_CATALOG)
     resolved_schema = _coalesce(schema, os.getenv("OPENSKY_TRINO_SCHEMA"), DEFAULT_SCHEMA)
@@ -81,16 +74,11 @@ def build_config(
         raise ValueError(
             "Missing OpenSky Trino username. Provide it via notebook widgets, secrets, or OPENSKY_TRINO_USER."
         )
-    if not resolved_password:
-        raise ValueError(
-            "Missing OpenSky Trino password. Provide it via notebook widgets, secrets, or OPENSKY_TRINO_PASSWORD."
-        )
 
     return OpenSkyTrinoConfig(
         host=resolved_host,
         port=resolved_port,
         user=resolved_user,
-        password=resolved_password,
         catalog=resolved_catalog,
         schema=resolved_schema,
         http_scheme=resolved_http_scheme,
@@ -104,6 +92,7 @@ class OpenSkyTrinoClient:
         self.config = config
 
     def query_pandas(self, sql: str) -> pd.DataFrame:
+        auth = OAuth2Authentication(redirect_auth_url_handler=ConsoleRedirectHandler())
         connection = connect(
             host=self.config.host,
             port=self.config.port,
@@ -111,7 +100,7 @@ class OpenSkyTrinoClient:
             catalog=self.config.catalog,
             schema=self.config.schema,
             http_scheme=self.config.http_scheme,
-            auth=BasicAuthentication(self.config.user, self.config.password),
+            auth=auth,
             verify=self.config.verify,
             request_timeout=self.config.request_timeout_seconds,
         )

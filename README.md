@@ -372,9 +372,12 @@ The fastest useful build sequence is:
 
 `01a_ingest_opensky_history.ipynb` resolves Trino credentials in this order:
 
-- Databricks secrets via `trino_secret_scope`, `trino_secret_username_key`, and `trino_secret_password_key`
-- direct notebook widgets `trino_user` and `trino_password` for ad hoc testing
-- environment variables such as `OPENSKY_TRINO_USER` and `OPENSKY_TRINO_PASSWORD`
+- `trino_user` or `OPENSKY_TRINO_USER` for the lowercase OpenSky username
+- optional Databricks secret lookup for the username
+- external OAuth2 authentication for the actual OpenSky login flow
+
+OpenSky's Trino endpoint requires external authentication rather than raw basic username/password exchange.
+The project Trino client therefore uses `OAuth2Authentication` instead of `BasicAuthentication`.
 
 Recommended default secret names:
 
@@ -407,6 +410,7 @@ Notebook defaults:
 - host: `trino.opensky-network.org`
 - catalog: `minio`
 - schema: `osky`
+- auth mode: external OAuth2 authentication
 - partition strategy: `hour` for state vectors and `day` for flights
 - write strategy: extract first, then partition-scoped `replaceWhere`
 
