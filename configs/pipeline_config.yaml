@@ -1,7 +1,7 @@
 catalog_name: adsb_airspace_eddf
 study_window:
-  start_date: 2026-03-01
-  end_date: 2026-03-03
+  start_date: "2026-03-01"
+  end_date: "2026-03-03"
 time_windows:
   raw_granularity: snapshot
   complexity_window_minutes: 5
