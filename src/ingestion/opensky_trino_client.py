@@ -91,30 +91,48 @@ class OpenSkyTrinoClient:
     def __init__(self, config: OpenSkyTrinoConfig) -> None:
         self.config = config
         self.auth = OAuth2Authentication(redirect_auth_url_handler=ConsoleRedirectHandler())
+        self.connection = None
+        self.cursor = None
+
+    def _ensure_cursor(self):
+        if self.connection is None:
+            self.connection = connect(
+                host=self.config.host,
+                port=self.config.port,
+                user=self.config.user,
+                catalog=self.config.catalog,
+                schema=self.config.schema,
+                http_scheme=self.config.http_scheme,
+                auth=self.auth,
+                verify=self.config.verify,
+                request_timeout=self.config.request_timeout_seconds,
+            )
+        if self.cursor is None:
+            self.cursor = self.connection.cursor()
+        return self.cursor
 
     def query_pandas(self, sql: str) -> pd.DataFrame:
-        connection = connect(
-            host=self.config.host,
-            port=self.config.port,
-            user=self.config.user,
-            catalog=self.config.catalog,
-            schema=self.config.schema,
-            http_scheme=self.config.http_scheme,
-            auth=self.auth,
-            verify=self.config.verify,
-            request_timeout=self.config.request_timeout_seconds,
-        )
-        cursor = connection.cursor()
+        cursor = self._ensure_cursor()
         try:
             cursor.execute(sql)
             rows = cursor.fetchall()
             columns = [column[0] for column in cursor.description or []]
             return pd.DataFrame(rows, columns=columns)
-        finally:
+        except Exception:
+            self.close()
+            raise
+
+    def close(self) -> None:
+        if self.cursor is not None:
             try:
-                cursor.close()
+                self.cursor.close()
             finally:
-                connection.close()
+                self.cursor = None
+        if self.connection is not None:
+            try:
+                self.connection.close()
+            finally:
+                self.connection = None
 
 
 def query_to_pandas(sql: str, **config_kwargs: Any) -> pd.DataFrame:
