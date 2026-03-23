@@ -1,4 +1,12 @@
 catalog_name: adsb_airspace_eddf
+trino_connection:
+  host: trino.opensky-network.org
+  port: 443
+  catalog: minio
+  schema: osky
+  secret_scope: opensky
+  username_key: username
+  password_key: password
 study_window:
   start_date: "2026-03-01"
   end_date: "2026-03-03"

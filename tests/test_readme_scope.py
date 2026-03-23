@@ -45,6 +45,8 @@ def test_configs_capture_initial_region_and_pipeline_defaults() -> None:
 
     for expected_text in [
         "catalog_name: adsb_airspace_eddf",
+        "trino_connection:",
+        "secret_scope: opensky",
         "complexity_window_minutes: 5",
         "trend_window_minutes: 15",
         "traffic_load",

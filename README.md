@@ -366,6 +366,21 @@ The fastest useful build sequence is:
 - OpenSky historical access via Trino
 - Trino CLI or Python Trino client
 - local environment capable of exporting Parquet or CSV
+- Databricks cluster or notebook environment with the `trino` package installed
+
+### OpenSky credentials in Databricks
+
+`01a_ingest_opensky_history.ipynb` resolves Trino credentials in this order:
+
+- Databricks secrets via `trino_secret_scope`, `trino_secret_username_key`, and `trino_secret_password_key`
+- direct notebook widgets `trino_user` and `trino_password` for ad hoc testing
+- environment variables such as `OPENSKY_TRINO_USER` and `OPENSKY_TRINO_PASSWORD`
+
+Recommended default secret names:
+
+- scope: `opensky`
+- username key: `username`
+- password key: `password`
 
 ### 1. Create a virtual environment
 
@@ -386,6 +401,14 @@ Edit:
 ### 3. Extract historical data
 
 Run the history notebook or Python module to extract bounded OpenSky Trino slices into Bronze tables.
+
+Notebook defaults:
+
+- host: `trino.opensky-network.org`
+- catalog: `minio`
+- schema: `osky`
+- partition strategy: `hour` for state vectors and `day` for flights
+- write strategy: extract first, then partition-scoped `replaceWhere`
 
 Expected raw outputs:
 

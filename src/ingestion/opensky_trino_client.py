@@ -1,0 +1,134 @@
+from __future__ import annotations
+
+import os
+from dataclasses import dataclass
+from typing import Any
+
+import pandas as pd
+
+try:
+    from trino.auth import BasicAuthentication
+    from trino.dbapi import connect
+except ImportError as exc:  # pragma: no cover - exercised in Databricks runtime
+    raise ImportError(
+        "The 'trino' package is required. Install it with `pip install trino` on the cluster."
+    ) from exc
+
+
+DEFAULT_HOST = "trino.opensky-network.org"
+DEFAULT_PORT = 443
+DEFAULT_CATALOG = "minio"
+DEFAULT_SCHEMA = "osky"
+DEFAULT_HTTP_SCHEME = "https"
+
+
+@dataclass(frozen=True)
+class OpenSkyTrinoConfig:
+    host: str = DEFAULT_HOST
+    port: int = DEFAULT_PORT
+    user: str = ""
+    password: str = ""
+    catalog: str = DEFAULT_CATALOG
+    schema: str = DEFAULT_SCHEMA
+    http_scheme: str = DEFAULT_HTTP_SCHEME
+    verify: bool = True
+    request_timeout_seconds: int = 180
+
+
+def _coalesce(*values: Any) -> str:
+    for value in values:
+        if value is None:
+            continue
+        text = str(value).strip()
+        if text:
+            return text
+    return ""
+
+
+def build_config(
+    *,
+    user: str | None = None,
+    password: str | None = None,
+    host: str | None = None,
+    port: int | str | None = None,
+    catalog: str | None = None,
+    schema: str | None = None,
+    http_scheme: str | None = None,
+    verify: bool | None = None,
+    request_timeout_seconds: int | None = None,
+) -> OpenSkyTrinoConfig:
+    resolved_user = _coalesce(user, os.getenv("OPENSKY_TRINO_USER"), os.getenv("OPENSKY_USERNAME"))
+    resolved_password = _coalesce(
+        password,
+        os.getenv("OPENSKY_TRINO_PASSWORD"),
+        os.getenv("OPENSKY_PASSWORD"),
+    )
+    resolved_host = _coalesce(host, os.getenv("OPENSKY_TRINO_HOST"), DEFAULT_HOST)
+    resolved_catalog = _coalesce(catalog, os.getenv("OPENSKY_TRINO_CATALOG"), DEFAULT_CATALOG)
+    resolved_schema = _coalesce(schema, os.getenv("OPENSKY_TRINO_SCHEMA"), DEFAULT_SCHEMA)
+    resolved_http_scheme = _coalesce(
+        http_scheme,
+        os.getenv("OPENSKY_TRINO_HTTP_SCHEME"),
+        DEFAULT_HTTP_SCHEME,
+    )
+    resolved_port = int(_coalesce(port, os.getenv("OPENSKY_TRINO_PORT"), str(DEFAULT_PORT)))
+    resolved_verify = verify if verify is not None else True
+    resolved_timeout = request_timeout_seconds or int(
+        _coalesce(os.getenv("OPENSKY_TRINO_TIMEOUT_SECONDS"), "180")
+    )
+
+    if not resolved_user:
+        raise ValueError(
+            "Missing OpenSky Trino username. Provide it via notebook widgets, secrets, or OPENSKY_TRINO_USER."
+        )
+    if not resolved_password:
+        raise ValueError(
+            "Missing OpenSky Trino password. Provide it via notebook widgets, secrets, or OPENSKY_TRINO_PASSWORD."
+        )
+
+    return OpenSkyTrinoConfig(
+        host=resolved_host,
+        port=resolved_port,
+        user=resolved_user,
+        password=resolved_password,
+        catalog=resolved_catalog,
+        schema=resolved_schema,
+        http_scheme=resolved_http_scheme,
+        verify=resolved_verify,
+        request_timeout_seconds=resolved_timeout,
+    )
+
+
+class OpenSkyTrinoClient:
+    def __init__(self, config: OpenSkyTrinoConfig) -> None:
+        self.config = config
+
+    def query_pandas(self, sql: str) -> pd.DataFrame:
+        connection = connect(
+            host=self.config.host,
+            port=self.config.port,
+            user=self.config.user,
+            catalog=self.config.catalog,
+            schema=self.config.schema,
+            http_scheme=self.config.http_scheme,
+            auth=BasicAuthentication(self.config.user, self.config.password),
+            verify=self.config.verify,
+            request_timeout=self.config.request_timeout_seconds,
+        )
+        cursor = connection.cursor()
+        try:
+            cursor.execute(sql)
+            rows = cursor.fetchall()
+            columns = [column[0] for column in cursor.description or []]
+            return pd.DataFrame(rows, columns=columns)
+        finally:
+            try:
+                cursor.close()
+            finally:
+                connection.close()
+
+
+def query_to_pandas(sql: str, **config_kwargs: Any) -> pd.DataFrame:
+    config = build_config(**config_kwargs)
+    client = OpenSkyTrinoClient(config)
+    return client.query_pandas(sql)
