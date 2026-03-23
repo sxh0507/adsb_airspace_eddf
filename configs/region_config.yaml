@@ -1,0 +1,16 @@
+focus_airport: EDDF
+ingestion_radius_nm: 150
+regional_bbox:
+  min_latitude: 49.5
+  max_latitude: 50.8
+  min_longitude: 7.8
+  max_longitude: 9.6
+altitude_bands:
+  - band_id: SFC_FL100
+    band_label: SFC-FL100
+    min_altitude_ft: 0
+    max_altitude_ft: 10000
+  - band_id: FL100_FL245
+    band_label: FL100-FL245
+    min_altitude_ft: 10001
+    max_altitude_ft: 24500
