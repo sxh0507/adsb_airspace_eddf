@@ -90,9 +90,9 @@ def build_config(
 class OpenSkyTrinoClient:
     def __init__(self, config: OpenSkyTrinoConfig) -> None:
         self.config = config
+        self.auth = OAuth2Authentication(redirect_auth_url_handler=ConsoleRedirectHandler())
 
     def query_pandas(self, sql: str) -> pd.DataFrame:
-        auth = OAuth2Authentication(redirect_auth_url_handler=ConsoleRedirectHandler())
         connection = connect(
             host=self.config.host,
             port=self.config.port,
@@ -100,7 +100,7 @@ class OpenSkyTrinoClient:
             catalog=self.config.catalog,
             schema=self.config.schema,
             http_scheme=self.config.http_scheme,
-            auth=auth,
+            auth=self.auth,
             verify=self.config.verify,
             request_timeout=self.config.request_timeout_seconds,
         )
