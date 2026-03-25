@@ -19,5 +19,9 @@ def test_opensky_live_client_module_contains_oauth2_and_states_contract() -> Non
         "client_credentials",
         "/states/all",
         "Authorization",
+        "baro_altitude_m",
+        "velocity_mps",
+        "scope_airport",
+        "scope_radius_nm",
     ]:
         assert expected_text in module_text

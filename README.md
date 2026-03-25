@@ -425,6 +425,11 @@ Run the cleaning and gridding step to create:
 
 - `silver_fra_flight_states_clean`
 
+Optional live Silver step:
+
+- run `02b_prepare_live_states_v2.ipynb` after `01b_ingest_opensky_live.ipynb`
+- it writes live snapshots into the shared V2 Silver cellization contract for later live-vs-history comparison
+
 ### 5. Build Gold metrics
 
 Run the feature notebook to create:
@@ -516,6 +521,20 @@ Purpose:
 Output:
 
 - `silver_fra_flight_states_clean`
+
+### `02b_prepare_live_states_v2.ipynb`
+
+Purpose:
+
+- transform `01b` Bronze live snapshots into the V2 Silver cellization contract
+- keep the same `cell_scheme_id` logic as the historical V2 workflow
+- support schema compatibility for live Bronze columns such as `baro_altitude_m`, `velocity_mps`, and `true_track_deg`
+
+Outputs:
+
+- `adsb_airspace_eddf.slv_airspace.flight_states_cellized_v2`
+- `adsb_airspace_eddf.ref.cell_schemes_v2`
+- `adsb_airspace_eddf.ref.airspace_cells_v2`
 
 ### `03_build_complexity_metrics.ipynb`
 

@@ -316,6 +316,8 @@ def normalize_states_payload(
     *,
     run_id: str,
     ingested_at: datetime | None = None,
+    scope_airport: str | None = None,
+    scope_radius_nm: int | None = None,
 ) -> list[dict[str, Any]]:
     snapshot_epoch = int(payload["time"])
     snapshot_time = datetime.fromtimestamp(snapshot_epoch, tz=UTC).replace(tzinfo=None)
@@ -343,13 +345,20 @@ def normalize_states_payload(
                 "longitude": state_vector[5] if len(state_vector) > 5 else None,
                 "latitude": state_vector[6] if len(state_vector) > 6 else None,
                 "baro_altitude": state_vector[7] if len(state_vector) > 7 else None,
+                "baro_altitude_m": state_vector[7] if len(state_vector) > 7 else None,
                 "on_ground": state_vector[8] if len(state_vector) > 8 else None,
                 "velocity": state_vector[9] if len(state_vector) > 9 else None,
+                "velocity_mps": state_vector[9] if len(state_vector) > 9 else None,
                 "true_track": state_vector[10] if len(state_vector) > 10 else None,
+                "true_track_deg": state_vector[10] if len(state_vector) > 10 else None,
                 "vertical_rate": state_vector[11] if len(state_vector) > 11 else None,
+                "vertical_rate_mps": state_vector[11] if len(state_vector) > 11 else None,
                 "geo_altitude": state_vector[13] if len(state_vector) > 13 else None,
+                "geo_altitude_m": state_vector[13] if len(state_vector) > 13 else None,
                 "squawk": _normalize_optional_text(state_vector[14] if len(state_vector) > 14 else None),
                 "position_source": state_vector[16] if len(state_vector) > 16 else None,
+                "scope_airport": _normalize_optional_text(scope_airport),
+                "scope_radius_nm": scope_radius_nm,
                 "ingested_at": normalized_ingested_at,
                 "run_id": run_id,
             }
