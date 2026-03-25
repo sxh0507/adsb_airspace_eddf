@@ -338,6 +338,7 @@ Safety rule:
 │   ├── 02_clean_and_prepare_states.ipynb
 │   ├── 02b_prepare_live_states_v2.ipynb
 │   ├── 03_build_complexity_metrics.ipynb
+│   ├── 03c_compare_live_vs_history_baseline.ipynb
 │   ├── 03b_build_live_complexity_metrics.ipynb
 │   └── 04_visualize_results.ipynb
 ├── src/
@@ -567,6 +568,18 @@ Outputs:
 - `adsb_airspace_eddf.gld_airspace.horizontal_complexity_v2`
 - `adsb_airspace_eddf.gld_airspace.horizontal_hotspots_v2`
 - `adsb_airspace_eddf.gld_airspace.complexity_trend_v2`
+
+### `03c_compare_live_vs_history_baseline.ipynb`
+
+Purpose:
+
+- compare the latest live Gold run from `03b_build_live_complexity_metrics.ipynb` against a historical Gold baseline from `03_build_complexity_metrics.ipynb`
+- produce a live trend-vs-baseline view, a ranked horizontal anomaly list, and a live-vs-history hotspot comparison
+- fall back from weekday-slot baselines to all-days slot baselines when historical samples are sparse
+
+Outputs:
+
+- in-memory comparison DataFrames: `trend_compare_df`, `horizontal_alerts_df`, `hotspot_compare_df`
 
 ### `04_visualize_results.ipynb`
 
