@@ -30,6 +30,7 @@ def test_live_clean_notebook_contains_v2_live_cellization_contract() -> None:
         "horizontal_cell_id",
         "vertical_cell_id",
         "projection_mode",
+        "Refusing to overwrite an entire source run when source_snapshot_time is set",
         "DELETE FROM",
         "local_nm",
     ]:

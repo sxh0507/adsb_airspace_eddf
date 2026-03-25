@@ -336,7 +336,9 @@ Safety rule:
 │   ├── 01a_ingest_opensky_history.ipynb
 │   ├── 01b_ingest_opensky_live.ipynb
 │   ├── 02_clean_and_prepare_states.ipynb
+│   ├── 02b_prepare_live_states_v2.ipynb
 │   ├── 03_build_complexity_metrics.ipynb
+│   ├── 03b_build_live_complexity_metrics.ipynb
 │   └── 04_visualize_results.ipynb
 ├── src/
 │   ├── ingestion/
@@ -529,6 +531,7 @@ Purpose:
 - transform `01b` Bronze live snapshots into the V2 Silver cellization contract
 - keep the same `cell_scheme_id` logic as the historical V2 workflow
 - support schema compatibility for live Bronze columns such as `baro_altitude_m`, `velocity_mps`, and `true_track_deg`
+- refuse destructive partial reruns when `source_snapshot_time` is set together with `overwrite_source_run=true`
 
 Outputs:
 
@@ -550,6 +553,20 @@ Outputs:
 - `gold_fra_grid_complexity_5m`
 - `gold_fra_complexity_hotspots`
 - `gold_fra_complexity_trend_15m`
+
+### `03b_build_live_complexity_metrics.ipynb`
+
+Purpose:
+
+- compute the same V2 horizontal complexity features on live Silver data from `02b_prepare_live_states_v2.ipynb`
+- keep the same `complexity_score` formula and `cell_scheme_id` contract as the historical V2 workflow
+- lower the default `minimum_active_windows` to `1` so short live runs can still produce hotspot output
+
+Outputs:
+
+- `adsb_airspace_eddf.gld_airspace.horizontal_complexity_v2`
+- `adsb_airspace_eddf.gld_airspace.horizontal_hotspots_v2`
+- `adsb_airspace_eddf.gld_airspace.complexity_trend_v2`
 
 ### `04_visualize_results.ipynb`
 

@@ -15,6 +15,7 @@ def test_clean_notebook_contains_v2_cellization_contract() -> None:
         "ref.cell_schemes_v2",
         "ref.airspace_cells_v2",
         "obs.pipeline_run_log",
+        "source_hour_epoch",
         "cell_scheme_id",
         "horizontal_cell_nm",
         "vertical_cell_ft",
@@ -22,6 +23,7 @@ def test_clean_notebook_contains_v2_cellization_contract() -> None:
         "horizontal_cell_id",
         "vertical_cell_id",
         "projection_mode",
+        "Refusing to overwrite an entire source run when source_hour_epoch is set",
         "DELETE FROM",
         "local_nm",
     ]:
