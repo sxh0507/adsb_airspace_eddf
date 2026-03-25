@@ -441,6 +441,24 @@ Create at least:
 - a temporal complexity trend plot
 - a hotspot ranking chart
 
+### Optional live ingestion
+
+Run `01b_ingest_opensky_live.ipynb` when you want a near-real-time Bronze stream for validation or live demonstrations.
+
+Live notebook defaults:
+
+- endpoint: `https://opensky-network.org/api/states/all`
+- auth mode: OAuth2 client credentials
+- default mode: `loop`
+- recommended development cadence: `60s`
+- scheduled recovery mode: `catch_up`
+- snapshot safety buffer: `90s`
+
+Required secrets:
+
+- `opensky/live_client_id`
+- `opensky/live_client_secret`
+
 ## Planned Notebook Flow
 
 ### `00_platform_setup_catalog_schema.ipynb`
@@ -475,6 +493,15 @@ Purpose:
 - ingest optional live or recent snapshots from the OpenSky live API
 - support recent-pattern validation and demonstration views
 - remain operationally independent from historical Trino backfill
+- support `once`, `loop`, and `catch_up` execution modes
+- write idempotent Bronze snapshots with snapshot-level observability
+
+Primary targets:
+
+- `adsb_airspace_eddf.brz_adsb.live_states`
+- `adsb_airspace_eddf.obs.ingestion_log`
+- `adsb_airspace_eddf.obs.ingestion_partition_log`
+- `adsb_airspace_eddf.obs.live_snapshot_manifest`
 
 ### `02_clean_and_prepare_states.ipynb`
 

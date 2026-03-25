@@ -30,6 +30,7 @@ def test_setup_notebook_contains_expected_schemas_tables_and_scope_defaults() ->
         "gld_airspace.horizontal_hotspots_v2",
         "gld_airspace.complexity_trend_v2",
         "obs.ingestion_partition_log",
+        "obs.live_snapshot_manifest",
         "PARTITIONED BY (hour)",
         "PARTITIONED BY (day)",
         "EDDF",

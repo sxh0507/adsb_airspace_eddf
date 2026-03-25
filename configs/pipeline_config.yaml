@@ -7,9 +7,25 @@ trino_connection:
   secret_scope: opensky
   username_key: username
   password_key: password
+opensky_live_connection:
+  base_url: https://opensky-network.org/api
+  token_url: https://auth.opensky-network.org/auth/realms/opensky-network/protocol/openid-connect/token
+  secret_scope: opensky
+  client_id_key: live_client_id
+  client_secret_key: live_client_secret
+live_ingestion:
+  default_mode: loop
+  poll_interval_seconds: 60
+  run_duration_minutes: 15
+  run_budget_seconds: 720
+  schedule_interval_seconds: 900
+  safety_buffer_seconds: 90
+  recoverable_lookback_seconds: 3300
+  retention_days: 14
+  max_snapshots_per_run: 80
 study_window:
   start_date: "2026-03-01"
-  end_date: "2026-03-03"
+  end_date: "2026-03-08"
 time_windows:
   raw_granularity: snapshot
   complexity_window_minutes: 5
