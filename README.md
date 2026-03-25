@@ -331,6 +331,9 @@ Safety rule:
 │   ├── 01b_live_catchup_job.template.json
 │   └── live_end_to_end_pipeline_job.template.json
 ├── data/
+│   ├── reference/
+│   │   └── basemaps/
+│   │       └── eddf_simplified_basemap_v1.geojson
 │   └── sample/
 ├── docs/
 │   └── figures/
@@ -675,6 +678,24 @@ Minimum figures:
 - complexity heatmap
 - 15-minute or hourly trend plot
 - top hotspot ranking
+
+## Reusable Basemap Layer
+
+The repository now includes a reusable EDDF basemap asset and helper layer for later `04` and `04b` overlays:
+
+- asset: `data/reference/basemaps/eddf_simplified_basemap_v1.geojson`
+- loader and plotting helper: `src/visualization/basemap.py`
+
+Current scope:
+
+- EDDF airport reference point
+- runway centerlines
+- airport reference zone
+- simplified terminal-area polygon for contextual overlays
+
+Important note:
+
+- this basemap is intentionally simplified for visualization reuse and should not be treated as an operational airspace boundary source
 
 ## Expected Outputs
 
