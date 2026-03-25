@@ -328,7 +328,8 @@ Safety rule:
 │   ├── region_config.yaml
 │   └── pipeline_config.yaml
 ├── databricks_jobs/
-│   └── 01b_live_catchup_job.template.json
+│   ├── 01b_live_catchup_job.template.json
+│   └── live_end_to_end_pipeline_job.template.json
 ├── data/
 │   └── sample/
 ├── docs/
@@ -616,6 +617,49 @@ sed "s|__NOTEBOOK_PATH__|${NOTEBOOK_PATH}|g" \
   > /tmp/01b_live_catchup_job.json
 
 databricks jobs create --json @/tmp/01b_live_catchup_job.json
+databricks jobs run-now <job-id>
+databricks jobs get <job-id>
+```
+
+### `databricks_jobs/live_end_to_end_pipeline_job.template.json`
+
+Purpose:
+
+- orchestrate the live chain end-to-end inside one Databricks Workflow
+- run `01b -> 02b -> 03b -> 03c` sequentially on the same 15-minute schedule
+- keep the same live `run_id` contract through Bronze, Silver, Gold, and live-vs-history comparison
+
+Task order:
+
+1. `01b_ingest_opensky_live.ipynb`
+2. `02b_prepare_live_states_v2.ipynb`
+3. `03b_build_live_complexity_metrics.ipynb`
+4. `03c_compare_live_vs_history_baseline.ipynb`
+
+Template behavior:
+
+- schedule: every 15 minutes in `UTC`
+- schedule starts in `PAUSED` state
+- compute: Databricks serverless workflow with `PERFORMANCE_OPTIMIZED`
+- queueing enabled and `max_concurrent_runs = 1`
+- `02b` and `03b` intentionally leave `source_run_id` blank so each task resolves the latest successful upstream run inside the same workflow cadence
+- `03c` leaves `historical_run_id` blank so it automatically compares against the latest successful historical `03` run
+
+Before creating the job:
+
+1. replace `__WORKSPACE_ROOT__` with your Databricks workspace repo path, for example `/Workspace/Users/<your-user>/adsb-airport-eta-lakehouse`
+2. confirm the `opensky` secret scope contains `live_client_id` and `live_client_secret`
+3. if you want to pin the historical baseline, replace the empty `historical_run_id` in the `03c` task parameters with a fixed historical `03` run id
+
+Example CLI flow:
+
+```bash
+WORKSPACE_ROOT="/Workspace/Users/<your-user>/adsb-airport-eta-lakehouse"
+sed "s|__WORKSPACE_ROOT__|${WORKSPACE_ROOT}|g" \
+  databricks_jobs/live_end_to_end_pipeline_job.template.json \
+  > /tmp/live_end_to_end_pipeline_job.json
+
+databricks jobs create --json @/tmp/live_end_to_end_pipeline_job.json
 databricks jobs run-now <job-id>
 databricks jobs get <job-id>
 ```

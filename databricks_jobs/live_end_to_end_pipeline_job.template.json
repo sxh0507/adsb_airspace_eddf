@@ -1,0 +1,131 @@
+{
+  "name": "adsb-airspace-eddf-live-end-to-end",
+  "timeout_seconds": 0,
+  "max_concurrent_runs": 1,
+  "performance_target": "PERFORMANCE_OPTIMIZED",
+  "queue": {
+    "enabled": true
+  },
+  "schedule": {
+    "quartz_cron_expression": "0 0/15 * * * ?",
+    "timezone_id": "UTC",
+    "pause_status": "PAUSED"
+  },
+  "tasks": [
+    {
+      "task_key": "01b_live_catchup",
+      "timeout_seconds": 0,
+      "max_retries": 1,
+      "min_retry_interval_millis": 120000,
+      "notebook_task": {
+        "notebook_path": "__WORKSPACE_ROOT__/notebooks/01b_ingest_opensky_live",
+        "source": "WORKSPACE",
+        "base_parameters": {
+          "catalog": "adsb_airspace_eddf",
+          "mode": "catch_up",
+          "poll_interval_seconds": "60",
+          "run_duration_minutes": "15",
+          "run_budget_seconds": "720",
+          "safety_buffer_seconds": "90",
+          "recoverable_lookback_seconds": "3300",
+          "max_snapshots_per_run": "80",
+          "bbox_min_latitude": "49.5",
+          "bbox_max_latitude": "50.8",
+          "bbox_min_longitude": "7.8",
+          "bbox_max_longitude": "9.6",
+          "dry_run": "false",
+          "live_base_url": "https://opensky-network.org/api",
+          "live_token_url": "https://auth.opensky-network.org/auth/realms/opensky-network/protocol/openid-connect/token",
+          "live_secret_scope": "opensky",
+          "live_client_id_key": "live_client_id",
+          "live_client_secret_key": "live_client_secret"
+        }
+      }
+    },
+    {
+      "task_key": "02b_prepare_live_states_v2",
+      "depends_on": [
+        {
+          "task_key": "01b_live_catchup"
+        }
+      ],
+      "timeout_seconds": 0,
+      "max_retries": 1,
+      "min_retry_interval_millis": 120000,
+      "notebook_task": {
+        "notebook_path": "__WORKSPACE_ROOT__/notebooks/02b_prepare_live_states_v2",
+        "source": "WORKSPACE",
+        "base_parameters": {
+          "catalog": "adsb_airspace_eddf",
+          "source_run_id": "",
+          "source_snapshot_time": "",
+          "horizontal_cell_nm": "10",
+          "vertical_cell_ft": "3000",
+          "analysis_window_minutes": "15",
+          "min_altitude_ft": "0",
+          "max_altitude_ft": "24500",
+          "projection_mode": "local_nm",
+          "include_on_ground": "false",
+          "overwrite_source_run": "true"
+        }
+      }
+    },
+    {
+      "task_key": "03b_build_live_complexity_metrics",
+      "depends_on": [
+        {
+          "task_key": "02b_prepare_live_states_v2"
+        }
+      ],
+      "timeout_seconds": 0,
+      "max_retries": 1,
+      "min_retry_interval_millis": 120000,
+      "notebook_task": {
+        "notebook_path": "__WORKSPACE_ROOT__/notebooks/03b_build_live_complexity_metrics",
+        "source": "WORKSPACE",
+        "base_parameters": {
+          "catalog": "adsb_airspace_eddf",
+          "source_run_id": "",
+          "cell_scheme_id": "eddf_h10nm_v3000ft_w15m_a0to24500_local_nm_v2",
+          "horizontal_cell_nm": "10",
+          "vertical_cell_ft": "3000",
+          "analysis_window_minutes": "15",
+          "min_altitude_ft": "0",
+          "max_altitude_ft": "24500",
+          "projection_mode": "local_nm",
+          "minimum_active_windows": "1",
+          "high_complexity_percentile": "0.9",
+          "overwrite_source_run": "true"
+        }
+      }
+    },
+    {
+      "task_key": "03c_compare_live_vs_history_baseline",
+      "depends_on": [
+        {
+          "task_key": "03b_build_live_complexity_metrics"
+        }
+      ],
+      "timeout_seconds": 0,
+      "max_retries": 0,
+      "notebook_task": {
+        "notebook_path": "__WORKSPACE_ROOT__/notebooks/03c_compare_live_vs_history_baseline",
+        "source": "WORKSPACE",
+        "base_parameters": {
+          "catalog": "adsb_airspace_eddf",
+          "live_run_id": "",
+          "historical_run_id": "",
+          "cell_scheme_id": "eddf_h10nm_v3000ft_w15m_a0to24500_local_nm_v2",
+          "horizontal_cell_nm": "10",
+          "vertical_cell_ft": "3000",
+          "analysis_window_minutes": "15",
+          "min_altitude_ft": "0",
+          "max_altitude_ft": "24500",
+          "projection_mode": "local_nm",
+          "min_weekday_baseline_samples": "2",
+          "top_n": "15"
+        }
+      }
+    }
+  ]
+}
