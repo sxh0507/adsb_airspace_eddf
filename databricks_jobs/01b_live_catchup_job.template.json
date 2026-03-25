@@ -2,6 +2,7 @@
   "name": "adsb-airspace-eddf-01b-live-catchup",
   "timeout_seconds": 0,
   "max_concurrent_runs": 1,
+  "performance_target": "PERFORMANCE_OPTIMIZED",
   "queue": {
     "enabled": true
   },
@@ -14,6 +15,8 @@
     {
       "task_key": "01b_live_catchup",
       "timeout_seconds": 0,
+      "max_retries": 1,
+      "min_retry_interval_millis": 120000,
       "notebook_task": {
         "notebook_path": "__NOTEBOOK_PATH__",
         "source": "WORKSPACE",
@@ -36,21 +39,6 @@
           "live_secret_scope": "opensky",
           "live_client_id_key": "live_client_id",
           "live_client_secret_key": "live_client_secret"
-        }
-      },
-      "new_cluster": {
-        "spark_version": "15.4.x-scala2.12",
-        "node_type_id": "r5.large",
-        "num_workers": 0,
-        "runtime_engine": "STANDARD",
-        "spark_conf": {
-          "spark.databricks.cluster.profile": "singleNode",
-          "spark.master": "local[*]"
-        },
-        "custom_tags": {
-          "ResourceClass": "SingleNode",
-          "Project": "adsb_airspace_eddf",
-          "Pipeline": "01b_live_catchup"
         }
       }
     }

@@ -598,13 +598,14 @@ Template behavior:
 - schedule: every 15 minutes in `UTC`
 - schedule starts in `PAUSED` state so the first production run can be triggered manually
 - notebook parameters match the `01b_ingest_opensky_live.ipynb` widgets
-- cluster: single-node `r5.large` on `15.4.x-scala2.12`
+- compute: Databricks serverless workflow with `PERFORMANCE_OPTIMIZED`
+- retry policy: one retry after 2 minutes for transient failures such as startup or short API/network hiccups
 
 Before creating the job:
 
 1. replace `__NOTEBOOK_PATH__` with your Databricks workspace notebook path for `01b_ingest_opensky_live`
 2. confirm the `opensky` secret scope contains `live_client_id` and `live_client_secret`
-3. adjust `node_type_id` if your workspace does not expose `r5.large`
+3. if your workspace is not serverless-only, adapt the template to use job compute before creating it
 
 Example CLI flow:
 
