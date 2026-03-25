@@ -327,6 +327,8 @@ Safety rule:
 ├── configs/
 │   ├── region_config.yaml
 │   └── pipeline_config.yaml
+├── databricks_jobs/
+│   └── 01b_live_catchup_job.template.json
 ├── data/
 │   └── sample/
 ├── docs/
@@ -580,6 +582,42 @@ Purpose:
 Outputs:
 
 - in-memory comparison DataFrames: `trend_compare_df`, `horizontal_alerts_df`, `hotspot_compare_df`
+
+## Databricks Job Template
+
+### `databricks_jobs/01b_live_catchup_job.template.json`
+
+Purpose:
+
+- provide a reproducible Databricks Workflow template for running `01b_ingest_opensky_live.ipynb` on a 15-minute schedule
+- use `catch_up` mode so the job can recover snapshots inside the recent OpenSky REST lookback window
+- keep `max_concurrent_runs = 1` and queueing enabled so one delayed run does not overlap the next
+
+Template behavior:
+
+- schedule: every 15 minutes in `UTC`
+- schedule starts in `PAUSED` state so the first production run can be triggered manually
+- notebook parameters match the `01b_ingest_opensky_live.ipynb` widgets
+- cluster: single-node `r5.large` on `15.4.x-scala2.12`
+
+Before creating the job:
+
+1. replace `__NOTEBOOK_PATH__` with your Databricks workspace notebook path for `01b_ingest_opensky_live`
+2. confirm the `opensky` secret scope contains `live_client_id` and `live_client_secret`
+3. adjust `node_type_id` if your workspace does not expose `r5.large`
+
+Example CLI flow:
+
+```bash
+NOTEBOOK_PATH="/Workspace/Users/<your-user>/adsb-airport-eta-lakehouse/notebooks/01b_ingest_opensky_live"
+sed "s|__NOTEBOOK_PATH__|${NOTEBOOK_PATH}|g" \
+  databricks_jobs/01b_live_catchup_job.template.json \
+  > /tmp/01b_live_catchup_job.json
+
+databricks jobs create --json @/tmp/01b_live_catchup_job.json
+databricks jobs run-now <job-id>
+databricks jobs get <job-id>
+```
 
 ### `04_visualize_results.ipynb`
 

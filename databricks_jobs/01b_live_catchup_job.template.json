@@ -1,0 +1,58 @@
+{
+  "name": "adsb-airspace-eddf-01b-live-catchup",
+  "timeout_seconds": 0,
+  "max_concurrent_runs": 1,
+  "queue": {
+    "enabled": true
+  },
+  "schedule": {
+    "quartz_cron_expression": "0 0/15 * * * ?",
+    "timezone_id": "UTC",
+    "pause_status": "PAUSED"
+  },
+  "tasks": [
+    {
+      "task_key": "01b_live_catchup",
+      "timeout_seconds": 0,
+      "notebook_task": {
+        "notebook_path": "__NOTEBOOK_PATH__",
+        "source": "WORKSPACE",
+        "base_parameters": {
+          "catalog": "adsb_airspace_eddf",
+          "mode": "catch_up",
+          "poll_interval_seconds": "60",
+          "run_duration_minutes": "15",
+          "run_budget_seconds": "720",
+          "safety_buffer_seconds": "90",
+          "recoverable_lookback_seconds": "3300",
+          "max_snapshots_per_run": "80",
+          "bbox_min_latitude": "49.5",
+          "bbox_max_latitude": "50.8",
+          "bbox_min_longitude": "7.8",
+          "bbox_max_longitude": "9.6",
+          "dry_run": "false",
+          "live_base_url": "https://opensky-network.org/api",
+          "live_token_url": "https://auth.opensky-network.org/auth/realms/opensky-network/protocol/openid-connect/token",
+          "live_secret_scope": "opensky",
+          "live_client_id_key": "live_client_id",
+          "live_client_secret_key": "live_client_secret"
+        }
+      },
+      "new_cluster": {
+        "spark_version": "15.4.x-scala2.12",
+        "node_type_id": "r5.large",
+        "num_workers": 0,
+        "runtime_engine": "STANDARD",
+        "spark_conf": {
+          "spark.databricks.cluster.profile": "singleNode",
+          "spark.master": "local[*]"
+        },
+        "custom_tags": {
+          "ResourceClass": "SingleNode",
+          "Project": "adsb_airspace_eddf",
+          "Pipeline": "01b_live_catchup"
+        }
+      }
+    }
+  ]
+}
