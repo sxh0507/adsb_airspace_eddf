@@ -84,3 +84,54 @@ def test_normalize_metar_records_maps_awc_fields_to_bronze_schema() -> None:
     assert row["flight_category"] == "VFR"
     assert json.loads(row["cloud_layers_json"])[1]["cover"] == "BKN"
     assert row["run_id"] == "weather_ingest_test"
+
+
+def test_normalize_metar_records_backfills_missing_visibility_weather_and_ceiling_from_raw_metar() -> None:
+    rows = normalize_metar_records(
+        records=[
+            {
+                "icaoId": "EDDF",
+                "obsTime": "2026-03-25T20:50:00Z",
+                "rawOb": "EDDF 252050Z VRB04KT 9999 -RA SCT020 BKN040 12/04 Q1017 NOSIG",
+                "temp": 12.0,
+                "dewp": 4.0,
+                "wdir": "VRB",
+                "wspd": 4,
+                "altim": 30.03,
+            }
+        ],
+        run_id="weather_ingest_test",
+        ingested_at=datetime(2026, 3, 25, 21, 0, tzinfo=UTC),
+        source_request_start=datetime(2026, 3, 25, 20, 0, tzinfo=UTC),
+        source_request_end=datetime(2026, 3, 25, 21, 0, tzinfo=UTC),
+    )
+
+    row = rows[0]
+    assert round(row["visibility_sm"], 1) == 6.2
+    assert row["weather_string"] == "-RA"
+    assert row["ceiling_ft_agl"] == 4000
+    assert row["flight_category"] == "VFR"
+    assert json.loads(row["cloud_layers_json"])[1]["base"] == 4000
+
+
+def test_normalize_metar_records_interprets_cavok_as_vfr_with_visibility() -> None:
+    rows = normalize_metar_records(
+        records=[
+            {
+                "icaoId": "EDDF",
+                "obsTime": "2026-03-25T21:20:00Z",
+                "rawOb": "EDDF 252120Z VRB04KT CAVOK 10/03 Q1016 NOSIG",
+                "wspd": 4,
+            }
+        ],
+        run_id="weather_ingest_test",
+        ingested_at=datetime(2026, 3, 25, 21, 30, tzinfo=UTC),
+        source_request_start=datetime(2026, 3, 25, 20, 0, tzinfo=UTC),
+        source_request_end=datetime(2026, 3, 25, 22, 0, tzinfo=UTC),
+    )
+
+    row = rows[0]
+    assert round(row["visibility_sm"], 1) == 6.2
+    assert row["weather_string"] == "CAVOK"
+    assert row["ceiling_ft_agl"] is None
+    assert row["flight_category"] == "VFR"

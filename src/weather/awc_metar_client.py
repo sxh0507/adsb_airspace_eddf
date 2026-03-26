@@ -17,6 +17,11 @@ DEFAULT_AWC_USER_AGENT = "adsb-airspace-eddf-weather/1.0"
 DEFAULT_MAX_LOOKBACK_DAYS = 15
 
 CEILING_LAYER_CODES = {"BKN", "OVC", "OVX", "VV"}
+WEATHER_TOKEN_RE = re.compile(
+    r"^(?:VC)?(?:-|\+)?(?:MI|PR|BC|DR|BL|SH|TS|FZ)?"
+    r"(?:DZ|RA|SN|SG|IC|PL|GR|GS|UP|BR|FG|FU|VA|DU|SA|HZ|PY|PO|SQ|FC|SS|DS)+$"
+)
+CLOUD_TOKEN_RE = re.compile(r"^(FEW|SCT|BKN|OVC|VV)(\d{3}|///)(CB|TCU|ACC)?$")
 
 
 class AviationWeatherAPIError(RuntimeError):
@@ -95,6 +100,123 @@ def _cloud_layer_base_ft(layer: dict[str, Any]) -> int | None:
         if base is not None:
             return base
     return None
+
+
+def _meters_to_sm(meters: float) -> float:
+    return meters / 1609.344
+
+
+def _parse_sm_token(token: str, previous_token: str | None = None) -> float | None:
+    text = token.strip().upper()
+    if not text.endswith("SM"):
+        return None
+
+    body = text[:-2]
+    if body.startswith("P"):
+        body = body[1:]
+    if body.startswith("M"):
+        body = body[1:]
+
+    if previous_token and previous_token.isdigit() and "/" in body:
+        numerator, denominator = body.split("/", 1)
+        if numerator.isdigit() and denominator.isdigit() and int(denominator) != 0:
+            return float(previous_token) + (int(numerator) / int(denominator))
+
+    if "/" in body:
+        numerator, denominator = body.split("/", 1)
+        if numerator.isdigit() and denominator.isdigit() and int(denominator) != 0:
+            return int(numerator) / int(denominator)
+
+    return _coerce_float(body)
+
+
+def _raw_tokens(raw_text: str | None) -> list[str]:
+    if not raw_text:
+        return []
+    return [token.strip() for token in str(raw_text).split() if token.strip()]
+
+
+def _extract_visibility_sm(record: dict[str, Any], *, raw_text: str | None) -> float | None:
+    for key in ("visib", "visibility", "visibilitySm", "visibilitySM", "visib_sm"):
+        parsed = _coerce_float(record.get(key))
+        if parsed is not None:
+            return parsed
+
+    tokens = _raw_tokens(raw_text)
+    for idx, token in enumerate(tokens):
+        normalized = token.upper()
+        if normalized == "CAVOK":
+            return _meters_to_sm(10000.0)
+        if normalized.endswith("SM"):
+            previous = tokens[idx - 1] if idx > 0 else None
+            parsed = _parse_sm_token(normalized, previous)
+            if parsed is not None:
+                return parsed
+        if re.fullmatch(r"\d{4}", normalized):
+            return _meters_to_sm(float(normalized))
+    return None
+
+
+def _extract_cloud_layers(record: dict[str, Any], *, raw_text: str | None) -> list[dict[str, Any]]:
+    for key in ("clouds", "cloudLayers", "skyConditions"):
+        value = record.get(key)
+        if isinstance(value, list):
+            return [layer for layer in value if isinstance(layer, dict)]
+
+    layers: list[dict[str, Any]] = []
+    for token in _raw_tokens(raw_text):
+        match = CLOUD_TOKEN_RE.match(token.upper())
+        if not match:
+            continue
+        cover, base_hundreds, suffix = match.groups()
+        layer: dict[str, Any] = {"cover": cover}
+        if base_hundreds != "///":
+            layer["base"] = int(base_hundreds) * 100
+        if suffix:
+            layer["cloudType"] = suffix
+        layers.append(layer)
+    return layers
+
+
+def _extract_weather_string(record: dict[str, Any], *, raw_text: str | None) -> str | None:
+    for key in ("wxString", "weatherString", "wx", "presentWeather"):
+        value = record.get(key)
+        if value not in (None, ""):
+            return str(value).strip()
+
+    tokens = _raw_tokens(raw_text)
+    if any(token.upper() == "CAVOK" for token in tokens):
+        return "CAVOK"
+
+    weather_tokens: list[str] = []
+    for token in tokens:
+        normalized = token.upper()
+        if WEATHER_TOKEN_RE.fullmatch(normalized):
+            weather_tokens.append(normalized)
+    if weather_tokens:
+        return " ".join(weather_tokens)
+    return None
+
+
+def _derive_flight_category(*, visibility_sm: float | None, ceiling_ft_agl: int | None, raw_text: str | None) -> str | None:
+    if raw_text and "CAVOK" in raw_text.upper():
+        return "VFR"
+    if visibility_sm is None and ceiling_ft_agl is None:
+        return None
+
+    if visibility_sm is not None and visibility_sm < 1.0:
+        return "LIFR"
+    if ceiling_ft_agl is not None and ceiling_ft_agl < 500:
+        return "LIFR"
+    if visibility_sm is not None and visibility_sm < 3.0:
+        return "IFR"
+    if ceiling_ft_agl is not None and ceiling_ft_agl < 1000:
+        return "IFR"
+    if visibility_sm is not None and visibility_sm <= 5.0:
+        return "MVFR"
+    if ceiling_ft_agl is not None and ceiling_ft_agl <= 3000:
+        return "MVFR"
+    return "VFR"
 
 
 def extract_ceiling_ft_agl(cloud_layers: list[dict[str, Any]] | None) -> int | None:
@@ -219,28 +341,39 @@ def normalize_metar_records(
         if not station_id or observation_time is None:
             continue
 
-        clouds = record.get("clouds")
-        if not isinstance(clouds, list):
-            clouds = []
+        raw_text = record.get("rawOb") or record.get("raw_text")
+        clouds = _extract_cloud_layers(record, raw_text=raw_text)
+        visibility_sm = _extract_visibility_sm(record, raw_text=raw_text)
+        weather_string = _extract_weather_string(record, raw_text=raw_text)
+        ceiling_ft_agl = extract_ceiling_ft_agl(clouds)
+        flight_category = (
+            str(record.get("fltCat") or record.get("flightCategory") or "").strip().upper() or None
+        )
+        if flight_category is None:
+            flight_category = _derive_flight_category(
+                visibility_sm=visibility_sm,
+                ceiling_ft_agl=ceiling_ft_agl,
+                raw_text=raw_text,
+            )
 
         rows.append(
             {
                 "report_date": observation_time.date(),
                 "station_id": station_id,
                 "observation_time": observation_time.replace(tzinfo=None),
-                "raw_text": record.get("rawOb") or record.get("raw_text"),
+                "raw_text": raw_text,
                 "report_type": record.get("metarType") or record.get("reportType"),
                 "temperature_c": _coerce_float(record.get("temp")),
                 "dewpoint_c": _coerce_float(record.get("dewp")),
                 "wind_direction_deg": _coerce_int(record.get("wdir")),
                 "wind_speed_kt": _coerce_float(record.get("wspd")),
                 "wind_gust_kt": _coerce_float(record.get("wgst")),
-                "visibility_sm": _coerce_float(record.get("visib")),
+                "visibility_sm": visibility_sm,
                 "altimeter_in_hg": _coerce_float(record.get("altim")),
                 "sea_level_pressure_mb": _coerce_float(record.get("slp")),
-                "flight_category": record.get("fltCat"),
-                "weather_string": record.get("wxString"),
-                "ceiling_ft_agl": extract_ceiling_ft_agl(clouds),
+                "flight_category": flight_category,
+                "weather_string": weather_string,
+                "ceiling_ft_agl": ceiling_ft_agl,
                 "latitude": _coerce_float(record.get("lat")),
                 "longitude": _coerce_float(record.get("lon")),
                 "elevation_m": _coerce_float(record.get("elev")),
