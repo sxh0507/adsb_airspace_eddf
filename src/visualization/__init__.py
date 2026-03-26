@@ -1,5 +1,6 @@
 """Visualization helpers for the Frankfurt ADS-B project."""
 
+from .airspace_3d import build_airspace_structure_frame, summarize_airspace_structure
 from .basemap import (
     DEFAULT_BASEMAP_NAME,
     collection_bounds,
@@ -23,6 +24,8 @@ from .vertical_profile import (
 )
 
 __all__ = [
+    "build_airspace_structure_frame",
+    "summarize_airspace_structure",
     "DEFAULT_BASEMAP_NAME",
     "collection_bounds",
     "feature_line_endpoints",
