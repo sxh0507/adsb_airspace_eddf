@@ -24,6 +24,8 @@ def test_visualize_notebook_contains_visual_contract() -> None:
         "build_vertical_profile_frame",
         "show_vertical_profile",
         "vertical_profile_axis",
+        "vertical_profile_runway_id",
+        "runway_aligned",
         "Frankfurt Vertical Profile (V2)",
         "Frankfurt Horizontal Complexity Heatmap (V2)",
         "Frankfurt 15-minute Complexity Trend (V2)",

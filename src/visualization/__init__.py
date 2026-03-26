@@ -3,6 +3,7 @@
 from .basemap import (
     DEFAULT_BASEMAP_NAME,
     collection_bounds,
+    feature_line_endpoints,
     feature_point_coordinates,
     default_layer_style,
     draw_basemap,
@@ -24,6 +25,7 @@ from .vertical_profile import (
 __all__ = [
     "DEFAULT_BASEMAP_NAME",
     "collection_bounds",
+    "feature_line_endpoints",
     "feature_point_coordinates",
     "default_layer_style",
     "draw_basemap",

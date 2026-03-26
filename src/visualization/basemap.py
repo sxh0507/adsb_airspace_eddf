@@ -125,6 +125,8 @@ def first_feature(
     *,
     layer_kind: str | None = None,
     feature_id: str | None = None,
+    property_name: str | None = None,
+    property_value: Any | None = None,
 ) -> dict[str, Any] | None:
     """Return the first feature that matches the requested filter."""
     for feature in basemap_geojson.get("features", []):
@@ -132,6 +134,8 @@ def first_feature(
         if layer_kind is not None and properties.get("layer_kind") != layer_kind:
             continue
         if feature_id is not None and properties.get("feature_id") != feature_id:
+            continue
+        if property_name is not None and properties.get(property_name) != property_value:
             continue
         return feature
     return None
@@ -146,6 +150,19 @@ def feature_point_coordinates(feature: dict[str, Any]) -> tuple[float, float]:
     if len(coordinates) < 2:
         raise ValueError("Point geometry must include longitude and latitude")
     return float(coordinates[0]), float(coordinates[1])
+
+
+def feature_line_endpoints(feature: dict[str, Any]) -> tuple[tuple[float, float], tuple[float, float]]:
+    """Return the first and last coordinates of a LineString feature."""
+    geometry = feature.get("geometry", {})
+    if geometry.get("type") != "LineString":
+        raise ValueError("feature_line_endpoints expects a LineString geometry")
+    coordinates = geometry.get("coordinates", [])
+    if len(coordinates) < 2:
+        raise ValueError("LineString geometry must include at least two coordinates")
+    start = coordinates[0]
+    end = coordinates[-1]
+    return (float(start[0]), float(start[1])), (float(end[0]), float(end[1]))
 
 
 def default_layer_style(layer_kind: str | None) -> dict[str, Any]:

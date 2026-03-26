@@ -31,6 +31,34 @@ def test_signed_axis_distance_nm_supports_both_axes() -> None:
     assert north_south > 0
 
 
+def test_signed_axis_distance_nm_supports_runway_aligned_axis() -> None:
+    runway_forward = signed_axis_distance_nm(
+        longitude=8.60,
+        latitude=50.03,
+        origin_longitude=8.57,
+        origin_latitude=50.03,
+        axis="runway_aligned",
+        axis_start_longitude=8.52,
+        axis_start_latitude=50.01,
+        axis_end_longitude=8.66,
+        axis_end_latitude=50.04,
+    )
+    runway_backward = signed_axis_distance_nm(
+        longitude=8.54,
+        latitude=50.02,
+        origin_longitude=8.57,
+        origin_latitude=50.03,
+        axis="runway_aligned",
+        axis_start_longitude=8.52,
+        axis_start_latitude=50.01,
+        axis_end_longitude=8.66,
+        axis_end_latitude=50.04,
+    )
+
+    assert runway_forward > 0
+    assert runway_backward < 0
+
+
 def test_build_vertical_profile_frame_groups_rows_into_bins() -> None:
     states_df = pd.DataFrame(
         [
@@ -119,3 +147,4 @@ def test_build_vertical_profile_matrix_and_summary() -> None:
     assert summary["profile_rows"] == 2
     assert summary["peak_aircraft_count"] == 2
     assert vertical_profile_axis_label("east_west").startswith("Signed Distance")
+    assert "07C/25C" in vertical_profile_axis_label("runway_aligned", runway_id="07C/25C")
