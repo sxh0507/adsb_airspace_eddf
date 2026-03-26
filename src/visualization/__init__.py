@@ -4,6 +4,7 @@ from .airspace_3d import build_airspace_structure_frame, summarize_airspace_stru
 from .basemap import (
     DEFAULT_BASEMAP_NAME,
     collection_bounds,
+    feature_coordinate_paths,
     feature_line_endpoints,
     feature_point_coordinates,
     default_layer_style,
@@ -28,6 +29,7 @@ __all__ = [
     "summarize_airspace_structure",
     "DEFAULT_BASEMAP_NAME",
     "collection_bounds",
+    "feature_coordinate_paths",
     "feature_line_endpoints",
     "feature_point_coordinates",
     "default_layer_style",

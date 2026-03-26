@@ -4,6 +4,8 @@ from src.visualization.basemap import (
     DEFAULT_BASEMAP_NAME,
     collection_bounds,
     default_layer_style,
+    feature_coordinate_paths,
+    first_feature,
     list_available_basemaps,
     load_basemap_geojson,
 )
@@ -41,3 +43,22 @@ def test_airport_point_default_style_requests_annotation() -> None:
     style = default_layer_style("airport_point")
     assert style["annotate"] is True
     assert style["marker"] == "o"
+
+
+def test_feature_coordinate_paths_support_polygon_and_line_layers() -> None:
+    basemap_geojson = load_basemap_geojson()
+    terminal_feature = first_feature(basemap_geojson, layer_kind="simplified_terminal_area")
+    runway_feature = first_feature(
+        basemap_geojson,
+        layer_kind="runway_centerline",
+        property_name="runway_id",
+        property_value="07C/25C",
+    )
+
+    terminal_paths = feature_coordinate_paths(terminal_feature)
+    runway_paths = feature_coordinate_paths(runway_feature)
+
+    assert len(terminal_paths) == 1
+    assert len(terminal_paths[0]) >= 4
+    assert len(runway_paths) == 1
+    assert len(runway_paths[0]) == 2

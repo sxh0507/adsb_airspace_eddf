@@ -165,6 +165,42 @@ def feature_line_endpoints(feature: dict[str, Any]) -> tuple[tuple[float, float]
     return (float(start[0]), float(start[1])), (float(end[0]), float(end[1]))
 
 
+def feature_coordinate_paths(feature: dict[str, Any]) -> list[list[tuple[float, float]]]:
+    """Return drawable coordinate paths for LineString and Polygon-like features."""
+    geometry = feature.get("geometry", {})
+    geometry_type = geometry.get("type")
+    coordinates = geometry.get("coordinates", [])
+
+    if geometry_type == "Point":
+        if len(coordinates) < 2:
+            raise ValueError("Point geometry must include longitude and latitude")
+        return [[(float(coordinates[0]), float(coordinates[1]))]]
+
+    if geometry_type == "LineString":
+        return [[(float(coord[0]), float(coord[1])) for coord in coordinates if len(coord) >= 2]]
+
+    if geometry_type == "MultiLineString":
+        return [
+            [(float(coord[0]), float(coord[1])) for coord in part if len(coord) >= 2]
+            for part in coordinates
+        ]
+
+    if geometry_type == "Polygon":
+        return [
+            [(float(coord[0]), float(coord[1])) for coord in ring if len(coord) >= 2]
+            for ring in coordinates
+        ]
+
+    if geometry_type == "MultiPolygon":
+        paths: list[list[tuple[float, float]]] = []
+        for polygon in coordinates:
+            for ring in polygon:
+                paths.append([(float(coord[0]), float(coord[1])) for coord in ring if len(coord) >= 2])
+        return paths
+
+    raise ValueError(f"feature_coordinate_paths does not support geometry type: {geometry_type}")
+
+
 def default_layer_style(layer_kind: str | None) -> dict[str, Any]:
     """Return a copy of the default drawing style for a given layer."""
     style = deepcopy(DEFAULT_STYLE)
