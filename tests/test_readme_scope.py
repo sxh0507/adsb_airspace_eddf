@@ -21,6 +21,8 @@ def test_readme_contains_frankfurt_scope_and_trino_plan() -> None:
         "15-minute",
         "01a_ingest_opensky_history.ipynb",
         "01b_ingest_opensky_live.ipynb",
+        "01c_ingest_awc_metar.ipynb",
+        "02c_align_weather_to_windows.ipynb",
         "obs.ingestion_partition_log",
         "dry_run=true",
         "external OAuth2 authentication",
@@ -47,6 +49,9 @@ def test_configs_capture_initial_region_and_pipeline_defaults() -> None:
     for expected_text in [
         "catalog_name: adsb_airspace_eddf",
         "trino_connection:",
+        "aviation_weather_connection:",
+        "station_id: EDDF",
+        "alignment_max_weather_age_minutes: 180",
         "secret_scope: opensky",
         "complexity_window_minutes: 5",
         "trend_window_minutes: 15",

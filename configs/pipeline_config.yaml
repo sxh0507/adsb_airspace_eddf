@@ -13,6 +13,14 @@ opensky_live_connection:
   secret_scope: opensky
   client_id_key: live_client_id
   client_secret_key: live_client_secret
+aviation_weather_connection:
+  base_url: https://aviationweather.gov/api/data
+  station_id: EDDF
+  user_agent: adsb-airspace-eddf-weather/1.0
+weather_ingestion:
+  default_lookback_hours: 48
+  max_lookback_days: 15
+  alignment_max_weather_age_minutes: 180
 live_ingestion:
   default_mode: loop
   poll_interval_seconds: 60

@@ -216,6 +216,7 @@ The default naming contract for the first Frankfurt version is:
 - `adsb_airspace_eddf.brz_adsb.live_states`
 - `adsb_airspace_eddf.brz_weather.metar_raw`
 - `adsb_airspace_eddf.slv_airspace.flight_states_clean`
+- `adsb_airspace_eddf.slv_airspace.analysis_window_weather_context_v1`
 - `adsb_airspace_eddf.gld_airspace.grid_complexity_5m`
 - `adsb_airspace_eddf.gld_airspace.complexity_hotspots`
 - `adsb_airspace_eddf.gld_airspace.complexity_trend_15m`
@@ -341,8 +342,10 @@ Safety rule:
 │   ├── 00_platform_setup_catalog_schema.ipynb
 │   ├── 01a_ingest_opensky_history.ipynb
 │   ├── 01b_ingest_opensky_live.ipynb
+│   ├── 01c_ingest_awc_metar.ipynb
 │   ├── 02_clean_and_prepare_states.ipynb
 │   ├── 02b_prepare_live_states_v2.ipynb
+│   ├── 02c_align_weather_to_windows.ipynb
 │   ├── 03_build_complexity_metrics.ipynb
 │   ├── 03c_compare_live_vs_history_baseline.ipynb
 │   ├── 03b_build_live_complexity_metrics.ipynb
@@ -473,6 +476,21 @@ Required secrets:
 - `opensky/live_client_id`
 - `opensky/live_client_secret`
 
+### Optional weather ingestion
+
+Run `01c_ingest_awc_metar.ipynb` when you want METAR context for live or recent historical windows.
+
+Weather notebook defaults:
+
+- source: official Aviation Weather Center METAR endpoint
+- station: `EDDF`
+- format: `json`
+- alignment target: later `analysis_window_start` windows from the shared V2 Silver table
+
+Important limitation:
+
+- the AWC Data API currently keeps only the previous `15` days of data, so older historical runs need a different archive source if you want backfilled weather context
+
 ## Planned Notebook Flow
 
 ### `00_platform_setup_catalog_schema.ipynb`
@@ -517,6 +535,21 @@ Primary targets:
 - `adsb_airspace_eddf.obs.ingestion_partition_log`
 - `adsb_airspace_eddf.obs.live_snapshot_manifest`
 
+### `01c_ingest_awc_metar.ipynb`
+
+Purpose:
+
+- ingest EDDF METAR observations from the official Aviation Weather Center API
+- store raw weather context in Bronze for later operational explanation layers
+- keep ingestion idempotent on `station_id + observation_time`
+- record run-level and partition-level ingestion status
+
+Primary targets:
+
+- `adsb_airspace_eddf.brz_weather.metar_raw`
+- `adsb_airspace_eddf.obs.ingestion_log`
+- `adsb_airspace_eddf.obs.ingestion_partition_log`
+
 ### `02_clean_and_prepare_states.ipynb`
 
 Purpose:
@@ -545,6 +578,19 @@ Outputs:
 - `adsb_airspace_eddf.slv_airspace.flight_states_cellized_v2`
 - `adsb_airspace_eddf.ref.cell_schemes_v2`
 - `adsb_airspace_eddf.ref.airspace_cells_v2`
+
+### `02c_align_weather_to_windows.ipynb`
+
+Purpose:
+
+- align METAR observations to the existing V2 `analysis_window_start` windows
+- use the latest METAR not after each window start to avoid future leakage
+- keep one weather-context row per window, including explicit `missing_weather` status when coverage gaps exist
+
+Outputs:
+
+- `adsb_airspace_eddf.slv_airspace.analysis_window_weather_context_v1`
+- `adsb_airspace_eddf.obs.pipeline_run_log`
 
 ### `03_build_complexity_metrics.ipynb`
 
