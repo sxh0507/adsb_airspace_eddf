@@ -54,7 +54,7 @@ def test_normalize_metar_records_maps_awc_fields_to_bronze_schema() -> None:
                 "wdir": 240,
                 "wspd": 12,
                 "wgst": 20,
-                "visib": 6.0,
+                "visib": "6+",
                 "altim": 29.97,
                 "slp": 1015.2,
                 "fltCat": "VFR",
@@ -80,6 +80,7 @@ def test_normalize_metar_records_maps_awc_fields_to_bronze_schema() -> None:
     assert row["report_date"].isoformat() == "2026-03-25"
     assert row["observation_time"] == datetime(2026, 3, 25, 14, 20)
     assert row["ceiling_ft_agl"] == 4000
+    assert row["visibility_sm"] == 6.0
     assert row["flight_category"] == "VFR"
     assert json.loads(row["cloud_layers_json"])[1]["cover"] == "BKN"
     assert row["run_id"] == "weather_ingest_test"

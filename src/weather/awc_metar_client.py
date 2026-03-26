@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 import json
 from math import ceil
+import re
 from typing import Any
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
@@ -55,13 +56,35 @@ def parse_awc_timestamp(value: Any) -> datetime | None:
 def _coerce_float(value: Any) -> float | None:
     if value in (None, ""):
         return None
-    return float(value)
+    if isinstance(value, (int, float)):
+        return float(value)
+
+    text = str(value).strip()
+    if not text:
+        return None
+
+    normalized = text
+    if normalized.endswith("+"):
+        normalized = normalized[:-1]
+    if normalized.startswith("M") and re.fullmatch(r"M\d+(\.\d+)?", normalized):
+        normalized = "-" + normalized[1:]
+
+    if re.fullmatch(r"[-+]?\d+(\.\d+)?", normalized):
+        return float(normalized)
+
+    match = re.search(r"[-+]?\d+(\.\d+)?", normalized)
+    if match is None:
+        return None
+    return float(match.group(0))
 
 
 def _coerce_int(value: Any) -> int | None:
     if value in (None, ""):
         return None
-    return int(float(value))
+    parsed = _coerce_float(value)
+    if parsed is None:
+        return None
+    return int(parsed)
 
 
 def _cloud_layer_base_ft(layer: dict[str, Any]) -> int | None:
