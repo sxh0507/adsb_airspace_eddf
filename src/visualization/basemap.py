@@ -120,6 +120,34 @@ def filter_basemap_layers(
     return filtered
 
 
+def first_feature(
+    basemap_geojson: dict[str, Any],
+    *,
+    layer_kind: str | None = None,
+    feature_id: str | None = None,
+) -> dict[str, Any] | None:
+    """Return the first feature that matches the requested filter."""
+    for feature in basemap_geojson.get("features", []):
+        properties = feature.get("properties", {})
+        if layer_kind is not None and properties.get("layer_kind") != layer_kind:
+            continue
+        if feature_id is not None and properties.get("feature_id") != feature_id:
+            continue
+        return feature
+    return None
+
+
+def feature_point_coordinates(feature: dict[str, Any]) -> tuple[float, float]:
+    """Return longitude, latitude for a point feature."""
+    geometry = feature.get("geometry", {})
+    if geometry.get("type") != "Point":
+        raise ValueError("feature_point_coordinates expects a Point geometry")
+    coordinates = geometry.get("coordinates", [])
+    if len(coordinates) < 2:
+        raise ValueError("Point geometry must include longitude and latitude")
+    return float(coordinates[0]), float(coordinates[1])
+
+
 def default_layer_style(layer_kind: str | None) -> dict[str, Any]:
     """Return a copy of the default drawing style for a given layer."""
     style = deepcopy(DEFAULT_STYLE)
