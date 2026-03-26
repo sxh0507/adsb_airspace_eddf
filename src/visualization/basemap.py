@@ -58,6 +58,39 @@ LAYER_STYLES = {
         "alpha": 0.16,
         "zorder": 0,
     },
+    "tma_boundary": {
+        "edgecolor": "#3f7f93",
+        "facecolor": "#d9edf3",
+        "linewidth": 1.3,
+        "linestyle": "-.",
+        "alpha": 0.1,
+        "zorder": 0,
+    },
+    "ctr_boundary": {
+        "edgecolor": "#2f6d57",
+        "facecolor": "#dcefe4",
+        "linewidth": 1.35,
+        "linestyle": "--",
+        "alpha": 0.12,
+        "zorder": 1,
+    },
+    "terminal_corridor": {
+        "edgecolor": "#7a5c1f",
+        "linewidth": 1.6,
+        "linestyle": ":",
+        "alpha": 0.8,
+        "zorder": 3,
+    },
+    "waypoint": {
+        "edgecolor": "#5f4b8b",
+        "facecolor": "#5f4b8b",
+        "marker": "o",
+        "s": 24,
+        "annotate": True,
+        "text_offset": (0.012, 0.012),
+        "text_color": "#4c3d6d",
+        "zorder": 5,
+    },
 }
 
 

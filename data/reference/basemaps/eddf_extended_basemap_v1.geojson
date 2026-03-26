@@ -1,0 +1,286 @@
+{
+  "type": "FeatureCollection",
+  "name": "eddf_extended_basemap_v1",
+  "metadata": {
+    "focus_airport": "EDDF",
+    "crs": "EPSG:4326",
+    "description": "Extended reusable basemap template for Frankfurt EDDF visualizations with simplified CTR/TMA, terminal corridors, and waypoint layers.",
+    "usage_note": "Visualization context only. These geometries are intentionally simplified templates and are not suitable for operational navigation, procedure design, or formal aeronautical analysis.",
+    "version": "v1"
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "feature_id": "eddf_airport_point",
+        "layer_kind": "airport_point",
+        "label": "EDDF"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [8.570556, 50.033333]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "feature_id": "eddf_airport_reference_zone",
+        "layer_kind": "airport_reference_zone",
+        "label": "EDDF Airport Reference Zone"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [8.48, 49.955],
+          [8.7, 49.955],
+          [8.7, 50.085],
+          [8.48, 50.085],
+          [8.48, 49.955]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "feature_id": "eddf_simplified_terminal_area",
+        "layer_kind": "simplified_terminal_area",
+        "label": "Frankfurt Terminal Area (Simplified)"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [8.0, 49.7],
+          [8.55, 49.62],
+          [9.12, 49.71],
+          [9.42, 49.98],
+          [9.38, 50.38],
+          [8.96, 50.68],
+          [8.24, 50.72],
+          [7.95, 50.44],
+          [8.0, 49.7]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "feature_id": "eddf_tma_boundary_template",
+        "layer_kind": "tma_boundary",
+        "label": "Frankfurt TMA (Template)"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [7.86, 49.72],
+          [8.22, 49.55],
+          [8.92, 49.54],
+          [9.33, 49.78],
+          [9.46, 50.18],
+          [9.28, 50.56],
+          [8.85, 50.78],
+          [8.18, 50.82],
+          [7.88, 50.58],
+          [7.86, 49.72]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "feature_id": "eddf_ctr_boundary_template",
+        "layer_kind": "ctr_boundary",
+        "label": "Frankfurt CTR (Template)"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [8.33, 49.89],
+          [8.79, 49.88],
+          [8.89, 50.06],
+          [8.79, 50.17],
+          [8.40, 50.18],
+          [8.30, 50.05],
+          [8.33, 49.89]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "feature_id": "eddf_corridor_west_to_07_template",
+        "layer_kind": "terminal_corridor",
+        "label": "West Corridor 07 (Template)",
+        "corridor_id": "WEST_TO_07"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [7.96, 50.01],
+          [8.18, 50.015],
+          [8.39, 50.022],
+          [8.57, 50.033]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "feature_id": "eddf_corridor_east_to_25_template",
+        "layer_kind": "terminal_corridor",
+        "label": "East Corridor 25 (Template)",
+        "corridor_id": "EAST_TO_25"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [9.42, 50.08],
+          [9.16, 50.07],
+          [8.86, 50.052],
+          [8.57, 50.033]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "feature_id": "eddf_corridor_south_to_18_template",
+        "layer_kind": "terminal_corridor",
+        "label": "South Corridor 18 (Template)",
+        "corridor_id": "SOUTH_TO_18"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [8.565, 49.62],
+          [8.565, 49.80],
+          [8.566, 49.93],
+          [8.566, 50.025]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "feature_id": "eddf_waypoint_west_gate_template",
+        "layer_kind": "waypoint",
+        "label": "WEST_GATE"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [8.03, 50.01]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "feature_id": "eddf_waypoint_east_gate_template",
+        "layer_kind": "waypoint",
+        "label": "EAST_GATE"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [9.26, 50.07]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "feature_id": "eddf_waypoint_south_gate_template",
+        "layer_kind": "waypoint",
+        "label": "SOUTH_GATE"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [8.565, 49.71]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "feature_id": "eddf_waypoint_north_gate_template",
+        "layer_kind": "waypoint",
+        "label": "NORTH_GATE"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [8.59, 50.45]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "feature_id": "eddf_waypoint_northeast_gate_template",
+        "layer_kind": "waypoint",
+        "label": "NE_GATE"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [9.03, 50.33]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "feature_id": "eddf_runway_07l_25r",
+        "layer_kind": "runway_centerline",
+        "label": "07L/25R",
+        "runway_id": "07L/25R"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [8.505, 50.033],
+          [8.648, 50.06]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "feature_id": "eddf_runway_07c_25c",
+        "layer_kind": "runway_centerline",
+        "label": "07C/25C",
+        "runway_id": "07C/25C"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [8.521, 50.01],
+          [8.664, 50.037]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "feature_id": "eddf_runway_07r_25l",
+        "layer_kind": "runway_centerline",
+        "label": "07R/25L",
+        "runway_id": "07R/25L"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [8.538, 49.988],
+          [8.681, 50.015]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "feature_id": "eddf_runway_18",
+        "layer_kind": "runway_centerline",
+        "label": "18",
+        "runway_id": "18"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [8.566, 50.053],
+          [8.566, 49.996]
+        ]
+      }
+    }
+  ]
+}

@@ -13,6 +13,7 @@ from src.visualization.basemap import (
 
 def test_default_basemap_asset_is_available() -> None:
     assert DEFAULT_BASEMAP_NAME in list_available_basemaps()
+    assert "eddf_extended_basemap_v1" in list_available_basemaps()
 
 
 def test_eddf_basemap_contains_expected_layers() -> None:
@@ -62,3 +63,33 @@ def test_feature_coordinate_paths_support_polygon_and_line_layers() -> None:
     assert len(terminal_paths[0]) >= 4
     assert len(runway_paths) == 1
     assert len(runway_paths[0]) == 2
+
+
+def test_extended_basemap_contains_ctr_tma_corridor_and_waypoint_layers() -> None:
+    basemap_geojson = load_basemap_geojson("eddf_extended_basemap_v1")
+    layer_kinds = {feature["properties"]["layer_kind"] for feature in basemap_geojson["features"]}
+
+    assert {
+        "airport_point",
+        "airport_reference_zone",
+        "simplified_terminal_area",
+        "tma_boundary",
+        "ctr_boundary",
+        "terminal_corridor",
+        "waypoint",
+        "runway_centerline",
+    } <= layer_kinds
+
+    corridor_count = sum(
+        1
+        for feature in basemap_geojson["features"]
+        if feature["properties"]["layer_kind"] == "terminal_corridor"
+    )
+    waypoint_count = sum(
+        1
+        for feature in basemap_geojson["features"]
+        if feature["properties"]["layer_kind"] == "waypoint"
+    )
+
+    assert corridor_count >= 3
+    assert waypoint_count >= 4
